@@ -143,3 +143,35 @@ recognition.onresult = (event) => {
         }
     }
 };
+// ... (phần khai báo biến)
+let isRecording = false;
+
+recognition.continuous = true;
+recognition.interimResults = true;
+recognition.lang = 'vi-VN';
+
+// Tự động bật lại khi bị ngắt
+recognition.onend = () => {
+    if (isRecording) {
+        try {
+            recognition.start();
+            console.log("Đã tự động khởi động lại...");
+        } catch (e) {
+            console.error("Lỗi restart:", e);
+        }
+    }
+};
+
+startBtn.onclick = () => {
+    if (!isRecording) {
+        isRecording = true;
+        recognition.start();
+        startBtn.innerText = "DỪNG LẠI";
+        startBtn.classList.add('active');
+    } else {
+        isRecording = false;
+        recognition.stop(); // Chỉ khi bấm nút này nó mới thực sự dừng
+        startBtn.innerText = "BẮT ĐẦU NÓI";
+        startBtn.classList.remove('active');
+    }
+};
