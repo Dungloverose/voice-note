@@ -150,28 +150,56 @@ recognition.continuous = true;
 recognition.interimResults = true;
 recognition.lang = 'vi-VN';
 
-// Tự động bật lại khi bị ngắt
-recognition.onend = () => {
-    if (isRecording) {
-        try {
-            recognition.start();
-            console.log("Đã tự động khởi động lại...");
-        } catch (e) {
-            console.error("Lỗi restart:", e);
-        }
-    }
-};
+<!-- Các thẻ HTML của bạn ở trên ... -->
 
-startBtn.onclick = () => {
-    if (!isRecording) {
-        isRecording = true;
-        recognition.start();
-        startBtn.innerText = "DỪNG LẠI";
-        startBtn.classList.add('active');
-    } else {
-        isRecording = false;
-        recognition.stop(); // Chỉ khi bấm nút này nó mới thực sự dừng
-        startBtn.innerText = "BẮT ĐẦU NÓI";
-        startBtn.classList.remove('active');
+<script>
+    // 1. Khai báo bộ não nhận diện
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = true; // GIÚP KHÔNG TỰ DỪNG
+    recognition.interimResults = true;
+    recognition.lang = 'vi-VN';
+
+    let isRecording = false;
+
+    // 2. Hàm đọc thành tiếng
+    function botNoi(vanBan) {
+        window.speechSynthesis.cancel();
+        const thongDiep = new SpeechSynthesisUtterance(vanBan);
+        thongDiep.lang = 'vi-VN';
+        window.speechSynthesis.speak(thongDiep);
     }
-};
+
+    // 3. Logic khi có kết quả
+    recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                transcript = event.results[i][0].transcript;
+                document.getElementById('displayText').innerText = transcript;
+                botNoi(transcript); // PHÁT ÂM THANH
+            }
+        }
+    };
+
+    // 4. TỰ ĐỘNG BẬT LẠI KHI BỊ NGẮT (CỨU NÈ!)
+    recognition.onend = () => {
+        if (isRecording) {
+            recognition.start(); 
+            console.log("Đang nghe tiếp...");
+        }
+    };
+
+    // 5. Nút bấm điều khiển
+    const startBtn = document.getElementById('startBtn'); // Đảm bảo ID đúng với nút của bạn
+    startBtn.onclick = () => {
+        if (!isRecording) {
+            isRecording = true;
+            recognition.start();
+            startBtn.innerText = "DỪNG LẠI";
+        } else {
+            isRecording = false;
+            recognition.stop();
+            startBtn.innerText = "BẮT ĐẦU NÓI";
+        }
+    };
+</script>
