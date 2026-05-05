@@ -117,3 +117,29 @@
 </script>
 </body>
 </html>
+// 1. Hàm dùng để đọc văn bản thành tiếng
+function botNoi(vanBan) {
+    // Xóa các yêu cầu đọc cũ để tránh bị chồng chéo tiếng
+    window.speechSynthesis.cancel();
+    
+    const thongDiep = new SpeechSynthesisUtterance(vanBan);
+    thongDiep.lang = 'vi-VN'; // Giọng tiếng Việt
+    thongDiep.rate = 1.0;     // Tốc độ đọc
+    window.speechSynthesis.speak(thongDiep);
+}
+
+// 2. Chèn vào logic nhận diện giọng nói của bạn
+recognition.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+            transcript = event.results[i][0].transcript;
+            
+            // Cập nhật giao diện
+            displayText.innerText = transcript;
+            
+            // --- QUAN TRỌNG: Gọi AI đọc câu này lên ---
+            botNoi(transcript);
+        }
+    }
+};
