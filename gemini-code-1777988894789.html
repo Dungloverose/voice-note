@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice Note - Live Server Mode</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center, #2e2a4f 0%, #1a162e 100%);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
+        }
+        #history-toggle {
+            position: fixed; left: 20px; top: 50%; transform: translateY(-50%);
+            width: 42px; height: 42px; background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; border-radius: 10px;
+            cursor: pointer; z-index: 100; font-weight: bold;
+        }
+        .sidebar {
+            position: fixed; left: -300px; top: 0; width: 280px; height: 100%;
+            background: rgba(20, 18, 38, 0.95); backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s;
+            padding: 25px; box-sizing: border-box; z-index: 99;
+        }
+        .sidebar.open { left: 0; }
+        .content { text-align: center; width: 80%; max-width: 900px; }
+        #display-text {
+            font-size: 2.8rem; font-weight: 700; line-height: 1.3;
+            color: #6edff6; min-height: 180px; display: flex; align-items: center; justify-content: center;
+        }
+        .controls {
+            position: fixed; bottom: 50px; background: rgba(255, 255, 255, 0.05);
+            padding: 12px 30px; border-radius: 50px; border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; gap: 15px;
+        }
+        .btn { padding: 12px 28px; border-radius: 30px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        #start-btn { background: #5fe2f0; color: #1a162e; }
+        #start-btn.active { background: #ff4b2b; color: #fff; }
+        #copy-btn { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        #history-list li { padding: 10px; border-bottom: 1px solid #333; font-size: 14px; color: #ccc; list-style: none; }
+    </style>
+</head>
+<body>
+    <button id="history-toggle">LS</button>
+    <div id="sidebar" class="sidebar">
+        <h3 style="color: #5fe2f0; margin-top: 0;">LỊCH SỬ</h3>
+        <ul id="history-list"></ul>
+    </div>
+    <div class="content"><div id="display-text">Đang chạy qua Live Server...</div></div>
+    <div class="controls">
+        <button id="start-btn" class="btn">BẮT ĐẦU NÓI</button>
+        <button id="copy-btn" class="btn">SAO CHÉP</button>
+    </div>
+
+<script>
+    const startBtn = document.getElementById('start-btn');
+    const displayText = document.getElementById('display-text');
+    const historyList = document.getElementById('history-list');
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('history-toggle');
+
+    let isRecording = false;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+    recognition.lang = 'vi-VN';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    toggle.onclick = () => {
+        sidebar.classList.toggle('open');
+        toggle.style.left = sidebar.classList.contains('open') ? "290px" : "20px";
+    };
+
+    recognition.onresult = (event) => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            let transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                const li = document.createElement('li');
+                li.innerText = transcript;
+                historyList.prepend(li);
+                displayText.innerText = transcript;
+            } else {
+                interim += transcript;
+            }
+        }
+        if (interim) displayText.innerText = interim;
+    };
+
+    // Tự động khởi động lại khi trình duyệt ngắt (Infinite Mode)
+    recognition.onend = () => {
+        if (isRecording) {
+            try { recognition.start(); } catch (e) {}
+        }
+    };
+
+    startBtn.onclick = () => {
+        if (!isRecording) {
+            isRecording = true;
+            recognition.start();
+            startBtn.innerText = "DỪNG LẠI";
+            startBtn.classList.add('active');
+        } else {
+            isRecording = false;
+            recognition.stop();
+            startBtn.innerText = "BẮT ĐẦU NÓI";
+            startBtn.classList.remove('active');
+        }
+    };
+
+    document.getElementById('copy-btn').onclick = () => {
+        navigator.clipboard.writeText(displayText.innerText);
+    };
+</script>
+</body>
+</html>
